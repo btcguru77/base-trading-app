@@ -4,12 +4,18 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import Script from "next/script";
 
-import { PeriodParams } from "../../../public/libraries/charting_library/charting_library";
-import { CoinInfo } from "@/props/types";
+// import {
+//     ChartingLibraryWidgetOptions,
+//     PeriodParams,
+//     ResolutionString,
+// } from "@/libraries/charting_library/charting_library";
+// import { coinInfo } from "@/utils/types";
+import { PeriodParams } from "../../../../public/libraries/charting_library/charting_library";
+import { coinInfo } from "../../utils/types";
 // import { TVChartContainer } from "@/components/TVChartContainer";
 
 interface TradingChartProps {
-  param: CoinInfo;
+  param: coinInfo;
 }
 
 const TVChartContainer = dynamic(
@@ -54,7 +60,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({ param }) => {
       />
       {isScriptReady && param && (
         <TVChartContainer
-          tokenId={param?.tokenId || ""}
+          runeId={param?.runeId || ""}
           name={param.name}
           pairIndex={10}
           token={param.token}

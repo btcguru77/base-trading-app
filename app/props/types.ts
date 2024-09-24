@@ -22,6 +22,30 @@ export type Chart = {
   closes: number[];
 };
 
+export interface tokenProps {
+  id: number,
+  addr: string,
+  name: string,
+  price: number,
+  volumeH6: number,
+  priceChangeH6: number,
+  fdv: number,
+  website?: string,
+  twitter?: string,
+  telegram?: string,
+  discord?: string 
+}
+
+export interface txProps {
+  id: number,
+  blocknum: string,
+  type: number,
+  asset: string | null,
+  amount: number | null,
+  tx: string,
+  timestamp: number
+}
+
 export interface CoinInfo {
   _id?: string;
   name: string;

@@ -1,26 +1,23 @@
 const columns = [
   { name: "ID", uid: "id", sortable: true },
-  { name: "DATE", uid: "date", sortable: true },
+  { name: "TIMESTAMP", uid: "timestamp", sortable: true },
+  { name: "BLOCKNUM", uid: "blocknum", sortable: true },
   { name: "TYPE", uid: "type", sortable: true },
-  { name: "USD", uid: "usd", sortable: true },
-  { name: "TOKEN", uid: "token", sortable: true },
-  { name: "WETH", uid: "weth", sortable: true },
-  { name: "PRICE", uid: "price", sortable: true },
-  { name: "MAKER", uid: "maker", sortable: true },
+  { name: "ASSET", uid: "asset", sortable: true },
+  { name: "AMOUNT", uid: "amount", sortable: true },
   { name: "TX", uid: "tx", sortable: true },
 ];
 
 const tokenColumns = [
-  { name: "ID", uid: "id", sortable: true },
   { name: "NAME", uid: "name", sortable: true },
   { name: "PRICE", uid: "price", sortable: true },
-  { name: "TXNS", uid: "txns", sortable: true },
-  { name: "VOLUME", uid: "volume", sortable: true },
-  { name: "MAKERS", uid: "makers", sortable: true },
-  { name: "FIVEM", uid: "fiveM", sortable: true },
-  { name: "ONEHOUR", uid: "oneHour", sortable: true },
-  { name: "SIXHOUR", uid: "sixHour", sortable: true },
-  { name: "DAY", uid: "day", sortable: true },
+  { name: "VOLUMEH6", uid: "volumeH6", sortable: true },
+  { name: "PRICECHANGEH6", uid: "priceChangeH6", sortable: true },
+  { name: "FDV", uid: "fdv", sortable: true },
+  { name: "WEBSITE", uid: "website", sortable: true },
+  { name: "TWITTER", uid: "twitter", sortable: true },
+  { name: "TELEGRAM", uid: "telegram", sortable: true },
+  { name: "DISCORD", uid: "discord", sortable: true },
 ];
 
 const statusOptions = [
@@ -252,31 +249,8 @@ const txs = [
   },
 ];
 
-const tokens = [
-  {
-    id: 1,
-    name: "CAT/WETH",
-    price: 0,
-    txns: 29,
-    volume: 29,
-    makers: 29,
-    fiveM: 30,
-    oneHour: 30,
-    sixHour: 30,
-    day: 30,
-  },
-  {
-    id: 2,
-    name: "BASED/WETH",
-    price: 0,
-    txns: 29,
-    volume: 29,
-    makers: 29,
-    fiveM: 30,
-    oneHour: 30,
-    sixHour: 30,
-    day: 30,
-  },
-];
+const tokenAddrs = [
+  "0x52b492a33E447Cdb854c7FC19F1e57E8BfA1777D",
+]
 
-export { columns, txs, tokenColumns, tokens, statusOptions };
+export { columns, txs, tokenColumns, statusOptions, tokenAddrs };

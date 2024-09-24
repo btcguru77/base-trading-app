@@ -1,5 +1,6 @@
 "use client";
 
+import { custom } from "viem";
 import type {
   Bar,
   LibrarySymbolInfo,
@@ -7,13 +8,13 @@ import type {
   DatafeedConfiguration,
   ResolutionString,
   PeriodParams,
-} from "../../../public/libraries/charting_library/charting_library";
+} from "../../../../public/libraries/charting_library/charting_library";
 import { subscribeOnStream, unsubscribeFromStream } from "./streaming";
-import { getChartTable } from "./getChartTable";
+import { getChartTable } from "../../utils/getChartTable";
 
 const lastBarsCache = new Map<string, Bar>();
-// const minPrice: Number = 0;
-// const maxPrice: Number = 0;
+const minPrice: Number = 0;
+const maxPrice: Number = 0;
 // DatafeedConfiguration implementation
 const configurationData: DatafeedConfiguration = {
   // Represents the resolutions for bars supported by your datafeed
@@ -32,14 +33,14 @@ export function getDataFeed({
   pairIndex,
   customPeriodParams,
   name,
-  // token,
-  tokenId,
+  token,
+  runeId,
 }: {
-  tokenId: string;
+  runeId: string;
   name: string;
   pairIndex: number;
   customPeriodParams: PeriodParams;
-  // token: string;
+  token: string;
 }): IBasicDataFeed {
   const getBars = async (
     symbolInfo: LibrarySymbolInfo,
@@ -52,11 +53,11 @@ export function getDataFeed({
     // console.log("[getBars]: Method call", symbolInfo, resolution, from, to);
     try {
       const chartTable = await getChartTable({
-        tokenId,
-        // token,
-        // pairIndex,
-        // from,
-        // to,
+        runeId,
+        token,
+        pairIndex,
+        from,
+        to,
         range: +resolution,
       });
 
@@ -99,9 +100,9 @@ export function getDataFeed({
 
     resolveSymbol: async (
       symbolName,
-      onSymbolResolvedCallback
-      // _onResolveErrorCallback,
-      // _extension
+      onSymbolResolvedCallback,
+      _onResolveErrorCallback,
+      _extension
     ) => {
       // console.log("[resolveSymbol]: Method call", symbolName);
 

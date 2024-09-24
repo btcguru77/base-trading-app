@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Base Chain Trading App
 
-## Getting Started
+## Purpose
 
-First, run the development server:
+THe purpose of this project is to create a basic trading app using typescript on Base (EVM L2 Blockchain)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Funtionality
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Show information about a specific asset (Price, 6h Volume, 6h Price Change, FDV, Others...)
+2. Buy/Sell asset with/for native token
+3. Show portfolio data (In USD)
+4. Track and show transactions for the wallet
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Helpful APIs/Docs
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Understanding how EVM transactions work: https://www.quicknode.com/guides/ethereum-development/smart-contracts/a-dive-into-evm-architecture-and-opcodes#understanding-evm-transaction-execution
+- Check out the Alchemy docs: https://docs.alchemy.com/reference/api-overview
+- Get token info using Dexscreener api: https://docs.dexscreener.com/api/reference
+- Use 0x for swapping https://0x.org/products/swap
 
-## Learn More
+## Implementation
 
-To learn more about Next.js, take a look at the following resources:
+1. Completed
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    You can specify the token list that you want to track in `/app/props/data.ts/tokenAddrs`.
+    Get the token data by calling `getTokenInfo` function of `/app/lib/api.ts`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Not Completed
 
-## Deploy on Vercel
+    Just completed funtionality that can make buy/sell transaction using `@0x/swap-ts-sdk` SDK. Didn't test yet.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Completed
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    In the first page `https://localhost:3000/` we can see all infomation of token in USD.
+
+4. Completed
+
+    We can check the buy/sell transactions of specific token in `http://localhost:3000/token/${tokenAddr}`.
+
+    Completed using `alchemy-sdk`. 
+    
+    `getTxHistory()` function of `/app/lib/api.ts`.
+5. Just completed `Trading View Chart` for static data.

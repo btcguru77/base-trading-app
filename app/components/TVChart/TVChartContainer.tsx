@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import ReactLoading from "react-loading";
-import { twMerge } from "tailwind-merge";
+import { useContext, useEffect, useRef, useState } from "react";
+import { PeriodParamsInfo } from "../../utils/types";
 import {
   chartOverrides,
   disabledFeatures,
   enabledFeatures,
-} from "@/props/constants";
+} from "../../utils/constants";
 import { getDataFeed } from "./datafeed";
+import ReactLoading from "react-loading";
+import { twMerge } from "tailwind-merge";
+import UserContext from "../../context/UserContext";
 import {
   ChartingLibraryWidgetOptions,
   IChartingLibraryWidget,
   ResolutionString,
   widget,
-} from "../../../public/libraries/charting_library/charting_library";
-import { useAppContext } from "@/context/AppContext";
-import { PeriodParamsInfo } from "@/props/types";
+} from "../../../public/libraries/charting_library";
 
 export type TVChartContainerProps = {
-  tokenId: string;
+  runeId: string;
   name: string;
   pairIndex: number;
   token: string;
@@ -30,16 +30,16 @@ export type TVChartContainerProps = {
 };
 
 export const TVChartContainer = ({
-  tokenId,
+  runeId,
   name,
   pairIndex,
-  // token,
+  token,
   customPeriodParams,
 }: TVChartContainerProps) => {
   const chartContainerRef =
     useRef<HTMLDivElement>() as React.MutableRefObject<HTMLInputElement>;
   const tvWidgetRef = useRef<IChartingLibraryWidget | null>(null);
-  const { isLoading, setIsLoading } = useAppContext();
+  const { isLoading, setIsLoading } = useContext(UserContext);
 
   useEffect(() => {
     if (!chartContainerRef.current) {
@@ -54,13 +54,7 @@ export const TVChartContainer = ({
       const widgetOptions: ChartingLibraryWidgetOptions = {
         symbol: name,
         debug: false,
-        datafeed: getDataFeed({
-          pairIndex,
-          name,
-          // token,
-          customPeriodParams,
-          tokenId,
-        }),
+        datafeed: getDataFeed({ pairIndex, name, token, customPeriodParams, runeId }),
         theme: "dark",
         locale: "en",
         container: elem,

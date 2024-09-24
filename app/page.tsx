@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Table,
   TableHeader,
@@ -19,128 +19,119 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
-  Link,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import { FaChevronDown, FaEdit, FaPlus, FaSearch } from "react-icons/fa";
-import { tokenColumns, tokens, statusOptions } from "@/props/data";
+import { FaChevronDown, FaSearch } from "react-icons/fa";
+import { tokenColumns, statusOptions, tokenAddrs } from "@/props/data";
 import { capitalize } from "@/props/utils";
+import { getTokenInfo } from "./lib/api";
+import { tokenProps } from "./props/types";
 
+// Map status to corresponding Chip color
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   paused: "danger",
   vacation: "warning",
 };
 
+// Default visible columns
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "price",
-  "txns",
+  "volumeH6",
   "volume",
-  "makers",
-  "fiveM",
-  "oneHour",
-  "sixHour",
-  "day",
+  "priceChangeH6",
+  "fdv",
+  "website",
+  "twitter",
+  "telegram",
+  "discord",
 ];
-
-type TokenProps = (typeof tokens)[0];
 
 export default function Home() {
   const router = useRouter();
 
-  const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
-  );
-  const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
+  // State variables
+  const [tokens, setTokens] = useState<tokenProps[]>([]);
+  const [isLoading, setLoading] = useState(true);
+  const [filterValue, setFilterValue] = useState<string>("");
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
+  const [visibleColumns, setVisibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
+  const [statusFilter, setStatusFilter] = useState<Selection>("all");
+  const [rowsPerPage, setRowsPerPage] = useState<number>(5);
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
   });
+  const [page, setPage] = useState<number>(1);
 
-  const [page, setPage] = React.useState(1);
-
+  // Search filter flag
   const hasSearchFilter = Boolean(filterValue);
 
-  const headerColumns = React.useMemo(() => {
-    if (visibleColumns === "all") return tokenColumns;
-
-    return tokenColumns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
-    );
+  // Dynamically generate header columns based on visible columns
+  const headerColumns = useMemo(() => {
+    return visibleColumns === "all"
+      ? tokenColumns
+      : tokenColumns.filter((column) =>
+          Array.from(visibleColumns).includes(column.uid)
+        );
   }, [visibleColumns]);
 
-  const filteredItems = React.useMemo(() => {
-    let filteredUsers = [...tokens];
+  // Filter and sort tokens based on search, status filter, and sorting rules
+  const filteredItems = useMemo(() => {
+    let filteredTokens = [...tokens];
 
     if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((tx) =>
+      filteredTokens = filteredTokens.filter((tx) =>
         tx.name.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
-    if (
-      statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
-      filteredUsers = filteredUsers.filter((tx) =>
+
+    if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
+      filteredTokens = filteredTokens.filter((tx: any) =>
         Array.from(statusFilter).includes(tx.makers)
       );
     }
 
-    return filteredUsers;
+    return filteredTokens;
   }, [tokens, filterValue, statusFilter]);
 
+  // Pagination
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-  const items = React.useMemo(() => {
+  const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
+    return filteredItems.slice(start, start + rowsPerPage);
   }, [page, filteredItems, rowsPerPage]);
 
-  const sortedItems = React.useMemo(() => {
-    return [...items].sort((a: TokenProps, b: TokenProps) => {
-      const first = a[sortDescriptor.column as keyof TokenProps] as number;
-      const second = b[sortDescriptor.column as keyof TokenProps] as number;
+  // Sort tokens based on selected column
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column as keyof tokenProps] as number;
+      const second = b[sortDescriptor.column as keyof tokenProps] as number;
       const cmp = first < second ? -1 : first > second ? 1 : 0;
-
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback(
-    (tx: TokenProps, columnKey: React.Key) => {
-      const cellValue = tx[columnKey as keyof TokenProps];
-      switch (columnKey) {
-        // case "date":
-        //   return <div>{tx.name}</div>;
-        default:
-          return cellValue;
-      }
-    },
-    []
-  );
+  // Render cell based on column
+  const renderCell = useCallback((tx: tokenProps, columnKey: React.Key) => {
+    const cellValue = tx[columnKey as keyof tokenProps];
+    return cellValue;
+  }, []);
 
-  const onNextPage = React.useCallback(() => {
-    if (page < pages) {
-      setPage(page + 1);
-    }
+  // Pagination handlers
+  const onNextPage = useCallback(() => {
+    if (page < pages) setPage(page + 1);
   }, [page, pages]);
 
-  const onPreviousPage = React.useCallback(() => {
-    if (page > 1) {
-      setPage(page - 1);
-    }
+  const onPreviousPage = useCallback(() => {
+    if (page > 1) setPage(page - 1);
   }, [page]);
 
-  const onRowsPerPageChange = React.useCallback(
+  const onRowsPerPageChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setRowsPerPage(Number(e.target.value));
       setPage(1);
@@ -148,7 +139,8 @@ export default function Home() {
     []
   );
 
-  const onSearchChange = React.useCallback((value?: string) => {
+  // Search filter handler
+  const onSearchChange = useCallback((value?: string) => {
     if (value) {
       setFilterValue(value);
       setPage(1);
@@ -157,12 +149,13 @@ export default function Home() {
     }
   }, []);
 
-  const onClear = React.useCallback(() => {
+  const onClear = useCallback(() => {
     setFilterValue("");
     setPage(1);
   }, []);
 
-  const topContent = React.useMemo(() => {
+  // Top content for filtering and columns visibility
+  const topContent = useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-end gap-3">
@@ -172,16 +165,13 @@ export default function Home() {
             placeholder="Search by token name..."
             startContent={<FaSearch />}
             value={filterValue}
-            onClear={() => onClear()}
+            onClear={onClear}
             onValueChange={onSearchChange}
           />
           <div className="flex gap-3">
             <Dropdown>
               <DropdownTrigger className="sm:flex hidden">
-                <Button
-                  endContent={<FaChevronDown className="text-small" />}
-                  variant="flat"
-                >
+                <Button endContent={<FaChevronDown />} variant="flat">
                   Status
                 </Button>
               </DropdownTrigger>
@@ -194,7 +184,7 @@ export default function Home() {
                 onSelectionChange={setStatusFilter}
               >
                 {statusOptions.map((status) => (
-                  <DropdownItem key={status.uid} className="capitalize">
+                  <DropdownItem key={status.uid}>
                     {capitalize(status.name)}
                   </DropdownItem>
                 ))}
@@ -202,10 +192,7 @@ export default function Home() {
             </Dropdown>
             <Dropdown>
               <DropdownTrigger className="sm:flex hidden">
-                <Button
-                  endContent={<FaChevronDown className="text-small" />}
-                  variant="flat"
-                >
+                <Button endContent={<FaChevronDown />} variant="flat">
                   Columns
                 </Button>
               </DropdownTrigger>
@@ -218,7 +205,7 @@ export default function Home() {
                 onSelectionChange={setVisibleColumns}
               >
                 {tokenColumns.map((column) => (
-                  <DropdownItem key={column.uid} className="capitalize">
+                  <DropdownItem key={column.uid}>
                     {capitalize(column.name)}
                   </DropdownItem>
                 ))}
@@ -244,19 +231,10 @@ export default function Home() {
         </div>
       </div>
     );
+  }, [filterValue, statusFilter, visibleColumns, onSearchChange, onRowsPerPageChange, tokens.length]);
 
-    // @eslint-disable-next-line
-  }, [
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    tokens.length,
-    hasSearchFilter,
-  ]);
-
-  const bottomContent = React.useMemo(() => {
+  // Bottom content for pagination and selection
+  const bottomContent = useMemo(() => {
     return (
       <div className="flex justify-between items-center px-2 py-2">
         <span className="w-[30%] text-default-400 text-small">
@@ -275,7 +253,7 @@ export default function Home() {
         />
         <div className="sm:flex justify-end gap-2 hidden w-[30%]">
           <Button
-            isDisabled={pages === 1}
+            isDisabled={page === 1}
             size="sm"
             variant="flat"
             onPress={onPreviousPage}
@@ -283,7 +261,7 @@ export default function Home() {
             Previous
           </Button>
           <Button
-            isDisabled={pages === 1}
+            isDisabled={page === pages}
             size="sm"
             variant="flat"
             onPress={onNextPage}
@@ -293,18 +271,32 @@ export default function Home() {
         </div>
       </div>
     );
-  }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
+  }, [selectedKeys, filteredItems.length, page, pages]);
 
+  // Fetch token information from the API
+  const getTokenInfos = async () => {
+    const tokenArr: tokenProps[] = [];
+    for (let i = 0; i < tokenAddrs.length; i++) {
+      const tokenAddr = tokenAddrs[i];
+      const token = await getTokenInfo(tokenAddr, i + 1);
+      tokenArr.push(token);
+    }
+    setTokens(tokenArr);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    getTokenInfos();
+  }, []);
+
+  // Main table render
   return (
     <div className="p-5">
       <Table
-        aria-label="Table with custom cells, pagination and sorting"
+        aria-label="Token table with pagination and sorting"
         isHeaderSticky
         bottomContent={bottomContent}
         bottomContentPlacement="outside"
-        classNames={{
-          wrapper: "max-h-[382px]",
-        }}
         selectedKeys={selectedKeys}
         selectionMode="single"
         sortDescriptor={sortDescriptor}
@@ -324,24 +316,16 @@ export default function Home() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No tokens found"} items={sortedItems}>
-          {(item) => {
-            const handleRowClick = () => {
-              router.push(`/token/${item.id}`);
-            };
-
-            return (
-              <TableRow
-                key={item.id}
-                onClick={handleRowClick}
-                style={{ cursor: "pointer" }}
-              >
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            );
-          }}
+        <TableBody isLoading={isLoading} loadingContent="Loading..." emptyContent="No tokens found" items={sortedItems}>
+          {(item) => (
+            <TableRow
+              key={item.id}
+              onClick={() => router.push(`/token/${item.addr}`)}
+              style={{ cursor: "pointer" }}
+            >
+              {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

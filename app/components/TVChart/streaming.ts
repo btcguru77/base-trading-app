@@ -6,14 +6,14 @@ import type {
   LibrarySymbolInfo,
   ResolutionString,
   SubscribeBarsCallback,
-} from "../../../public/libraries/charting_library/charting_library";
+} from "../../../../public/libraries/charting_library/charting_library";
 
-import { Chart } from "@/props/types";
 import { queryClient } from "../providers";
+import { Chart } from "../../utils/types";
 
 let socket: Socket | undefined = undefined;
-// let initialTimeStamp: number = new Date().getTime();
-// let lastUpdated = 0;
+let initialTimeStamp: number = new Date().getTime();
+let lastUpdated = 0;
 
 if (typeof window !== "undefined") {
   socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000");
@@ -35,7 +35,7 @@ const channelToSubscription: any = new Map<number, SubscriptionItem>();
 if (socket) {
   socket.on("connect", () => {
     console.log("[socket] Connected", socket!.id);
-    // initialTimeStamp = new Date().getTime();
+    initialTimeStamp = new Date().getTime();
   });
 
   socket.on("disconnect", (reason) => {
@@ -118,6 +118,7 @@ if (socket) {
         handler.callback(bar)
       );
     }
+
 
     queryClient.setQueryData<Chart | undefined>(["charts"], (oldData) => {
       if (!oldData) {

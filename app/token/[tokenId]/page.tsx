@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -8,46 +8,36 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Input,
   Button,
-  DropdownTrigger,
-  Dropdown,
-  DropdownMenu,
-  DropdownItem,
-  Chip,
   Pagination,
   Selection,
-  ChipProps,
   SortDescriptor,
   Link,
 } from "@nextui-org/react";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import { FaChevronDown, FaEdit, FaPlus, FaSearch } from "react-icons/fa";
-import { columns, txs, statusOptions } from "@/props/data";
-import { capitalize } from "@/props/utils";
-// import Trading from "./components/Trading";
+import { FaEdit } from "react-icons/fa";
+import { columns } from "@/props/data";
 import Sidebar from "./components/Sidebar";
-
-const statusColorMap: Record<string, ChipProps["color"]> = {
-  active: "success",
-  paused: "danger",
-  vacation: "warning",
-};
+import { txProps } from "@/props/types";
+import { getTokenAmount, getTxHistory } from "@/lib/api";
+import Trading from "./components/Trading";
+import { useAccount } from "wagmi";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "date",
+  "timestamp",
+  "blocknum",
   "type",
-  "usd",
-  "token",
-  "weth",
-  "price",
-  "maker",
+  "asset",
+  "amount",
   "tx",
 ];
 
-type TxProps = (typeof txs)[0];
 
 export default function Dashboard() {
+  const [tokenAddr, setTokenAddr] = useState<string>('');
+  const [txs, setTxs] = useState([]);
+  const [isLoading, setLoading] = useState(true);
+  const account = useAccount();
+
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
     new Set([])
@@ -77,20 +67,6 @@ export default function Dashboard() {
   const filteredItems = React.useMemo(() => {
     let filteredUsers = [...txs];
 
-    // if (hasSearchFilter) {
-    //   filteredUsers = filteredUsers.filter((tx) =>
-    //     tx.name.toLowerCase().includes(filterValue.toLowerCase())
-    //   );
-    // }
-    // if (
-    //   statusFilter !== "all" &&
-    //   Array.from(statusFilter).length !== statusOptions.length
-    // ) {
-    //   filteredUsers = filteredUsers.filter((tx) =>
-    //     Array.from(statusFilter).includes(tx.status)
-    //   );
-    // }
-
     return filteredUsers;
   }, [txs, filterValue, statusFilter]);
 
@@ -104,17 +80,17 @@ export default function Dashboard() {
   }, [page, filteredItems, rowsPerPage]);
 
   const sortedItems = React.useMemo(() => {
-    return [...items].sort((a: TxProps, b: TxProps) => {
-      const first = a[sortDescriptor.column as keyof TxProps] as number;
-      const second = b[sortDescriptor.column as keyof TxProps] as number;
+    return [...items].sort((a: txProps, b: txProps) => {
+      const first = a[sortDescriptor.column as keyof txProps] as number;
+      const second = b[sortDescriptor.column as keyof txProps] as number;
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((tx: TxProps, columnKey: React.Key) => {
-    const cellValue = tx[columnKey as keyof TxProps];
+  const renderCell = React.useCallback((tx: txProps, columnKey: React.Key) => {
+    const cellValue = tx[columnKey as keyof txProps];
     switch (columnKey) {
       // case "date":
       //   return <div>{tx.date}</div>;
@@ -170,73 +146,28 @@ export default function Dashboard() {
     setPage(1);
   }, []);
 
+  const getTokenHistory = async () => {
+    const txHis = await getTxHistory(tokenAddr, account.address!);
+    setTxs(txHis);
+    setLoading(false);
+  }
+  
+  useEffect(() => {
+    const currentPage = location.pathname;
+    setTokenAddr(currentPage.split('/')[2])
+  }, [])
+
+  useEffect(() => {
+    if (tokenAddr !== "") {
+      if (account.address) {
+        getTokenHistory()        
+      }
+    }
+  }, [tokenAddr, account.address])
+
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
-        {/* <div className="flex justify-between items-end gap-3">
-          <Input
-            isClearable
-            className="w-full sm:max-w-[44%]"
-            placeholder="Search by name..."
-            startContent={<FaSearch />}
-            value={filterValue}
-            onClear={() => onClear()}
-            onValueChange={onSearchChange}
-          />
-          <div className="flex gap-3">
-            <Dropdown>
-              <DropdownTrigger className="sm:flex hidden">
-                <Button
-                  endContent={<FaChevronDown className="text-small" />}
-                  variant="flat"
-                >
-                  Status
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={statusFilter}
-                selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
-              >
-                {statusOptions.map((status) => (
-                  <DropdownItem key={status.uid} className="capitalize">
-                    {capitalize(status.name)}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-            <Dropdown>
-              <DropdownTrigger className="sm:flex hidden">
-                <Button
-                  endContent={<FaChevronDown className="text-small" />}
-                  variant="flat"
-                >
-                  Columns
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={visibleColumns}
-                selectionMode="multiple"
-                onSelectionChange={setVisibleColumns}
-              >
-                {columns.map((column) => (
-                  <DropdownItem key={column.uid} className="capitalize">
-                    {capitalize(column.name)}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-            <Button color="primary" endContent={<FaPlus />}>
-              Add New
-            </Button>
-          </div>
-        </div> */}
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">
             Total {txs.length} txs
@@ -307,10 +238,7 @@ export default function Dashboard() {
   return (
     <div className="flex gap-5 p-5">
       <div className="w-full">
-        <div>
-          {/* <Trading></Trading> */}
-          Trading View
-        </div>
+        
         <div>
           <Table
             aria-label="Table with custom cells, pagination and sorting"
@@ -339,8 +267,8 @@ export default function Dashboard() {
                 </TableColumn>
               )}
             </TableHeader>
-            <TableBody emptyContent={"No txs found"} items={sortedItems}>
-              {(item) => (
+            <TableBody isLoading={isLoading} loadingContent="Loading..." emptyContent={"No txs found"} items={sortedItems}>
+              {(item: any) => (
                 <TableRow key={item.id}>
                   {(columnKey) => (
                     <TableCell>{renderCell(item, columnKey)}</TableCell>
