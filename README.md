@@ -25,9 +25,9 @@ THe purpose of this project is to create a basic trading app using typescript on
     You can specify the token list that you want to track in `/app/props/data.ts/tokenAddrs`.
     Get the token data by calling `getTokenInfo` function of `/app/lib/api.ts`.
 
-2. Not Completed
+2. Completed
 
-    Just completed funtionality that can make buy/sell transaction using `@0x/swap-ts-sdk` SDK. Didn't test yet.
+    Completed funtionality that can make buy/sell transaction using `@0x/swap-ts-sdk` SDK.
 
 3. Completed
 
@@ -40,4 +40,3 @@ THe purpose of this project is to create a basic trading app using typescript on
     Completed using `alchemy-sdk`. 
     
     `getTxHistory()` function of `/app/lib/api.ts`.
-5. Just completed `Trading View Chart` for static data.
